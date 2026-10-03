@@ -597,16 +597,14 @@ pub const File = struct {
     }
 };
 
-pub var io: std.Io = undefined;
-
 pub const Disk = struct {
     const Self = @This();
 
     getStatusFn: *const fn (self: *Self) Status,
     initializeFn: *const fn (self: *Self) Self.Error!Status,
-    readFn: *const fn (self: *Self, io: std.Io, buff: [*]u8, sector: c.LBA_t, count: c.UINT) Self.Error!void,
-    writeFn: *const fn (self: *Self, io: std.Io, buff: [*]const u8, sector: c.LBA_t, count: c.UINT) Self.Error!void,
-    ioctlFn: *const fn (self: *Self, io: std.Io, cmd: IoCtl, buff: [*]u8) Self.Error!void,
+    readFn: *const fn (self: *Self, buff: [*]u8, sector: c.LBA_t, count: c.UINT) Self.Error!void,
+    writeFn: *const fn (self: *Self, buff: [*]const u8, sector: c.LBA_t, count: c.UINT) Self.Error!void,
+    ioctlFn: *const fn (self: *Self, cmd: IoCtl, buff: [*]u8) Self.Error!void,
 
     pub fn getStatus(self: *Self) Status {
         return self.getStatusFn(self);
@@ -617,15 +615,15 @@ pub const Disk = struct {
     }
 
     pub fn read(self: *Self, buff: [*]u8, sector: c.LBA_t, count: c.UINT) Self.Error!void {
-        return self.readFn(self, io,buff, sector, count);
+        return self.readFn(self, buff, sector, count);
     }
 
     pub fn write(self: *Self, buff: [*]const u8, sector: c.LBA_t, count: c.UINT) Self.Error!void {
-        return self.writeFn(self, io,buff, sector, count);
+        return self.writeFn(self, buff, sector, count);
     }
 
     pub fn ioctl(self: *Self, cmd: IoCtl, buff: [*]u8) Self.Error!void {
-        return self.ioctlFn(self, io,cmd, buff);
+        return self.ioctlFn(self, cmd, buff);
     }
 
     fn mapResult(value: Self.Error!void) c.DRESULT {
@@ -712,6 +710,8 @@ pub const api = struct {
     pub const setlabel = c.f_setlabel; // Set volume label
     pub const setcp = c.f_setcp; // Set active code page
 };
+
+pub var io: std.Io = undefined;
 
 const RtcExport = struct {
     const Encoded = packed struct(c.DWORD) {
