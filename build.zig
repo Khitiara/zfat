@@ -178,8 +178,8 @@ pub fn build(b: *std.Build) void {
         },
     }
 
-    inline for (comptime std.meta.fields(Config)) |fld| {
-        add_config_field(config_header, config, fld.name);
+    inline for (comptime @typeInfo(Config).@"struct".field_names) |fld| {
+        add_config_field(config_header, config, fld);
     }
 
     switch (config.rtc) {
@@ -248,9 +248,7 @@ pub fn build(b: *std.Build) void {
 
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
+    run_cmd.addPassthruArgs();
 
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
